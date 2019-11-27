@@ -30,3 +30,13 @@
 *.exe
 *.out
 *.app
+x64/Debug/vc141.idb
+x64/Debug/vc141.pdb
+x64/Debug/VLAD.log
+x64/Debug/VLAD.tlog/CL.command.1.tlog
+x64/Debug/VLAD.tlog/CL.read.1.tlog
+x64/Debug/VLAD.tlog/CL.write.1.tlog
+x64/Debug/VLAD.tlog/link.command.1.tlog
+x64/Debug/VLAD.tlog/link.read.1.tlog
+x64/Debug/VLAD.tlog/link.write.1.tlog
+x64/Debug/VLAD.tlog/VLAD.lastbuildstate

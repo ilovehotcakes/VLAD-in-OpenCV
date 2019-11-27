@@ -189,7 +189,7 @@ public:
 
 int main(int argc, char **argv)
 {
-   Mat tmp = imread("kittens2.jpg");
+   Mat tmp = imread("../test_images/pippy.jpg");
    Mat image(tmp.rows, tmp.cols, CV_32FC1, Scalar(0));
    
    float *out = image.ptr<float>(0);
