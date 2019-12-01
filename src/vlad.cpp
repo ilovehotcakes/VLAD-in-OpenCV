@@ -1,7 +1,8 @@
-#include <opencv2/core.hpp>  // For K-means
+#include <opencv2/core.hpp>  // kmeans
 #include <opencv2/highgui.hpp>
 #include <opencv2/imgproc.hpp>
 #include <cmath>
+#include <algorithm>  // sort
 #include <fstream>
 #include <iostream>
 // #include <opencv2/xfeatures2d/sift.hpp>
@@ -10,6 +11,8 @@ using namespace std;
 
 
 // Todo: add namespace for cv and VLAD
+// Todo: change the interface to match opencv style
+// Todo: switch all the i to k and j to d; i to clusters and j to dimensions
 class VLAD 
 {
 private:
@@ -52,7 +55,7 @@ private:
 	// Todo: use opencv SIFT descriptor
 
 	// Compute the fisher vectors
-	// Todo: change inputArray from sift file to actual image
+	// Todo: change inputArray from sift file to actual image, add which descriptor to use, SIFT/SURF/etc.
 	void computeVLAD(const Mat &points)
 	{
 		Mat centers; // Center of the clusters k
@@ -153,12 +156,31 @@ public:
 
 
 		imshow("result", img);
+		// Todo: Option to write image
 		//imwrite("output.jpg", img);
-
-		//cout << "done" << endl;
-		waitKey(0);
 	}
 
-	// Todo: void outputVLAD()	
+	Mat getVLAD()
+	{
+		return finalV;
+	}
+
+	void compareVLAD(VLAD &comp)
+	{
+		for (int i = 0; i < k; i++) {
+			vector<float> interm;
+			float sum = 0;
+			for (int j = 0; j < d; j++) {
+				interm.push_back(pow(finalV.at<float>(11, j) - comp.getVLAD().at<float>(i, j), 2));
+			}
+			
+			sort(interm.begin(), interm.end());
+
+			for (int j = 0; j < 8 ; j++) {
+				sum += interm.at(j);
+			}
+			cout << i << " \t" << sqrt(sum) << endl;
+		}
+	}
 };
 
