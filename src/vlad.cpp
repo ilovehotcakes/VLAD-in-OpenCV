@@ -6,7 +6,7 @@
 #include <fstream>
 #include <iostream>
 // #include <opencv2/xfeatures2d/sift.hpp>
-using namespace cv;
+using namespace cv;  // Todo: add scope for cv namespace
 using namespace std;
 
 
@@ -77,7 +77,7 @@ private:
 			}
 		}
 
-		// Normalize vector using L2 norm
+		// Normalize vector using L2-norm
 		normalize(fisherV, finalV);
 	}
 
@@ -99,8 +99,9 @@ public:
 	void drawVLAD(int resolution = 32)
 	{
 		int sqSize = resolution;
-		double rad = sqSize * 10;
+		double rad = sqSize * 6;
 		double slantedRad = rad * cos(CV_PI / 4);
+		int thickness = 1;
 		Mat img(sqSize * 4, sqSize * 64, CV_8UC3, Scalar::all(255));
 
 
@@ -124,27 +125,27 @@ public:
 				for (int c = 0; c < 4; c++) {
 					Point sqCtr(sqSize / 2 + (i * 4 + r) * sqSize, sqSize / 2 + c * sqSize);
 					{
-						line(img, sqCtr, Point(sqCtr.x + slantedRad * abs(finalV.at<float>(i, counter)), sqCtr.y + slantedRad * abs(finalV.at<float>(i, counter))), rOrB(finalV.at<float>(i, counter)));
+						line(img, sqCtr, Point(sqCtr.x + slantedRad * abs(finalV.at<float>(i, counter)), sqCtr.y + slantedRad * abs(finalV.at<float>(i, counter))), rOrB(finalV.at<float>(i, counter)), thickness);
 						counter++;
-						line(img, sqCtr, Point(sqCtr.x - slantedRad * abs(finalV.at<float>(i, counter)), sqCtr.y + slantedRad * abs(finalV.at<float>(i, counter))), rOrB(finalV.at<float>(i, counter)));
+						line(img, sqCtr, Point(sqCtr.x - slantedRad * abs(finalV.at<float>(i, counter)), sqCtr.y + slantedRad * abs(finalV.at<float>(i, counter))), rOrB(finalV.at<float>(i, counter)), thickness);
 						counter++;
-						line(img, sqCtr, Point(sqCtr.x + slantedRad * abs(finalV.at<float>(i, counter)), sqCtr.y - slantedRad * abs(finalV.at<float>(i, counter))), rOrB(finalV.at<float>(i, counter)));
+						line(img, sqCtr, Point(sqCtr.x + slantedRad * abs(finalV.at<float>(i, counter)), sqCtr.y - slantedRad * abs(finalV.at<float>(i, counter))), rOrB(finalV.at<float>(i, counter)), thickness);
 						counter++;
-						line(img, sqCtr, Point(sqCtr.x - slantedRad * finalV.at<float>(i, counter), sqCtr.y - slantedRad * finalV.at<float>(i, counter)), rOrB(finalV.at<float>(i, counter)));
+						line(img, sqCtr, Point(sqCtr.x - slantedRad * finalV.at<float>(i, counter), sqCtr.y - slantedRad * finalV.at<float>(i, counter)), rOrB(finalV.at<float>(i, counter)), thickness);
 						counter++;
 
-						line(img, sqCtr, Point(sqCtr.x, sqCtr.y + rad * abs(finalV.at<float>(i, counter))), rOrB(finalV.at<float>(i, counter)));
+						line(img, sqCtr, Point(sqCtr.x, sqCtr.y + rad * abs(finalV.at<float>(i, counter))), rOrB(finalV.at<float>(i, counter)), thickness);
 						counter++;
-						line(img, sqCtr, Point(sqCtr.x, sqCtr.y - rad * abs(finalV.at<float>(i, counter))), rOrB(finalV.at<float>(i, counter)));
+						line(img, sqCtr, Point(sqCtr.x, sqCtr.y - rad * abs(finalV.at<float>(i, counter))), rOrB(finalV.at<float>(i, counter)), thickness);
 						counter++;
-						line(img, sqCtr, Point(sqCtr.x - abs(finalV.at<float>(i, counter)) * rad, sqCtr.y), rOrB(finalV.at<float>(i, counter)));
+						line(img, sqCtr, Point(sqCtr.x - abs(finalV.at<float>(i, counter)) * rad, sqCtr.y), rOrB(finalV.at<float>(i, counter)), thickness);
 						counter++;
-						line(img, sqCtr, Point(sqCtr.x + abs(finalV.at<float>(i, counter)) * rad, sqCtr.y), rOrB(finalV.at<float>(i, counter)));
-						circle(img, sqCtr, 2, Scalar(0));
+						line(img, sqCtr, Point(sqCtr.x + abs(finalV.at<float>(i, counter)) * rad, sqCtr.y), rOrB(finalV.at<float>(i, counter)), thickness);
+						circle(img, sqCtr, 2, Scalar(0), thickness * -1);
 					}
 				}
 			}
-			line(img, Point(4 * i * sqSize, 0), Point(4 * i * sqSize, 4 * sqSize), Scalar(0));
+			line(img, Point(4 * i * sqSize, 0), Point(4 * i * sqSize, 4 * sqSize), Scalar(0), thickness);
 		}
 
 		{
@@ -171,12 +172,12 @@ public:
 			vector<float> interm;
 			float sum = 0;
 			for (int j = 0; j < d; j++) {
-				interm.push_back(pow(finalV.at<float>(11, j) - comp.getVLAD().at<float>(i, j), 2));
+				interm.push_back(pow(finalV.at<float>(2, j) - comp.getVLAD().at<float>(i, j), 2));
 			}
 			
 			sort(interm.begin(), interm.end());
 
-			for (int j = 0; j < 8 ; j++) {
+			for (int j = 0; j < 128 ; j++) {
 				sum += interm.at(j);
 			}
 			cout << i << " \t" << sqrt(sum) << endl;
