@@ -16,7 +16,7 @@ using namespace std;
 class VLAD 
 {
 private:
-	// const string filename;
+	const string filename;
 	const int k;
 	const int d;
 	const int iterations;
@@ -24,7 +24,7 @@ private:
 	Mat finalV;
 
 
-	Mat readFile(const string filename) {
+	Mat readFile() {
 		ifstream file(filename);
 		float x;
 		file >> x;
@@ -49,15 +49,15 @@ private:
 		return points;
 	}
 
-	// Label 
+	// Initialize and label cluster centroids
 	void initLabel(Mat &labels, const Mat &points) {
-		Mat centers(k, d, CV_32FC1, Scalar(0));
-		int max = 162;  // max seems to be 162 though
+		Mat centars(k, d, CV_32FC1, Scalar(0));
+		int max = 81;  // max seems to be 162 though
 
 		// Initial k centers
 		for (int i = 0; i < k; i++) {
 			for (int j = i * 8; j < (i * 8 + 2); j++) {
-				centers.at<float>(i, j) = max;
+				centars.at<float>(i, j) = max;
 			}
 		}
 
@@ -73,7 +73,7 @@ private:
 				vector<float> vc;  // for k
 
 				for (int g = 0; g < d; g++) {
-					vc.push_back(centers.at<float>(j, g));
+					vc.push_back(centars.at<float>(j, g));
 				}
 
 				vec.push_back(norm(vp, vc));
@@ -89,9 +89,7 @@ private:
 			}
 
 			labels.at<int>(i) = cnt;
-			cout << i << " " << cnt << endl;
 		}
-		cout << "done" << endl;
 	}
 
 
@@ -104,7 +102,7 @@ private:
 	void computeVLAD(const Mat &points)
 	{
 		Mat centers; // Center of the clusters k
-		Mat labels;  // Mapping each point in points to a k
+		Mat labels = Mat(1, sampleCount, CV_32SC1);  // Mapping each point in points to a k
 		initLabel(labels, points);
 
 		// Compute k-means for each cluster k and label each points
@@ -129,15 +127,16 @@ private:
 
 	// Helper function for drawVLAD
 	Scalar rOrB(float value) {
+		// Red if positive, else blue
 		return (value > 0)? Scalar(0, 0, 255) : Scalar(255, 0, 0);
 	}
 
 
 public:
 	VLAD(const string filename, const int k = 16, const int dimensions = 128, const int iterations = 10)
-		: k(k), d(dimensions), iterations(iterations)
+		: filename(filename), k(k), d(dimensions), iterations(iterations)
 	{
-		Mat inputArray = readFile(filename);
+		Mat inputArray = readFile();
 		computeVLAD(inputArray);
 	}
 
@@ -202,7 +201,7 @@ public:
 		}
 
 
-		imshow("result", img);
+		imshow(filename, img);
 		// Todo: Option to write image
 		//imwrite("output.jpg", img);
 	}
