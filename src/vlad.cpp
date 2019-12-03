@@ -49,6 +49,51 @@ private:
 		return points;
 	}
 
+	// Label 
+	void initLabel(Mat &labels, const Mat &points) {
+		Mat centers(k, d, CV_32FC1, Scalar(0));
+		int max = 162;  // max seems to be 162 though
+
+		// Initial k centers
+		for (int i = 0; i < k; i++) {
+			for (int j = i * 8; j < (i * 8 + 2); j++) {
+				centers.at<float>(i, j) = max;
+			}
+		}
+
+		for (int i = 0; i < sampleCount; i++) {
+			vector<float> vec;  // To rank closest centriod => size = 16
+			vector<float> vp;   // for point => size = 128
+
+			for (int j = 0; j < d; j++) {
+				vp.push_back(points.at<float>(i, j));
+			}
+
+			for (int j = 0; j < k; j++) {
+				vector<float> vc;  // for k
+
+				for (int g = 0; g < d; g++) {
+					vc.push_back(centers.at<float>(j, g));
+				}
+
+				vec.push_back(norm(vp, vc));
+			}
+
+			float min = vec.at(0);
+			int cnt = 0;
+			for (int j = 1; j < k; j++) {
+				if (vec.at(j) <= min) {
+					min = vec.at(j);
+					cnt = j;
+				}
+			}
+
+			labels.at<int>(i) = cnt;
+			cout << i << " " << cnt << endl;
+		}
+		cout << "done" << endl;
+	}
+
 
 	// Todo: Hessian affine-region detector
 
@@ -60,9 +105,10 @@ private:
 	{
 		Mat centers; // Center of the clusters k
 		Mat labels;  // Mapping each point in points to a k
+		initLabel(labels, points);
 
 		// Compute k-means for each cluster k and label each points
-		kmeans(points, k, labels, TermCriteria(TermCriteria::EPS + TermCriteria::COUNT, 300, 0.001), iterations, KMEANS_PP_CENTERS, centers);
+		kmeans(points, k, labels, TermCriteria(TermCriteria::EPS + TermCriteria::COUNT, 300, 0.001), iterations, KMEANS_USE_INITIAL_LABELS, centers);
 		
 		// For each cluster, compute fisher vector
 		Mat fisherV;
@@ -77,7 +123,7 @@ private:
 			}
 		}
 
-		// Normalize vector using L2-norm
+		// Normalize vector using L2-norm, Todo: positive or negative values?
 		normalize(fisherV, finalV);
 	}
 
@@ -184,4 +230,3 @@ public:
 		}
 	}
 };
-
