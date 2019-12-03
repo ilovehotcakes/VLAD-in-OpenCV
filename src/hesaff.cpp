@@ -9,7 +9,7 @@
 
 #include <iostream>
 #include <fstream>
-#include <openCV2/features2d.hpp>
+#include <opencv2/features2d.hpp>
 #include <opencv2/imgproc.hpp>
 #include <opencv2/highgui.hpp>
 
@@ -160,36 +160,13 @@ public:
             out << endl;
          }
       }
-
-
-   //debuguse - copied from https://github.com/opencv/opencv/blob/master/modules/features2d/src/draw.cpp
-   static inline void drawKeypoints(InputArray image, const vector<Keypoint>& keys, InputOutputArray outImage,
-                      const Scalar& _color)
-   {
-      if (image.type() == CV_8UC3 || image.type() == CV_8UC4)
-         image.copyTo(outImage);
-      else
-         CV_Error(Error::StsBadArg, "Incorrect type of input image: " + typeToString(image.type()));
-
-      RNG &rng = theRNG();
-      bool isRandColor = _color == Scalar::all(-1);
-
-      CV_Assert(!outImage.empty());
-      vector<Keypoint>::const_iterator it = keys.begin(), end = keys.end();
-
-      for(; it != end; ++it)
-      {
-         Scalar color = isRandColor ? Scalar( rng(256), rng(256), rng(256), 255 ) : _color;
-         circle(outImage, Point(it->x, it->y), 3, color, 1);
-      }
-   }
 };
 
 
 
 int main(int argc, char **argv)
 {
-   Mat tmp = imread("../test_images/pippy.jpg");
+   Mat tmp = imread("../test_images/ukbench00003.jpg");
    Mat image(tmp.rows, tmp.cols, CV_32FC1, Scalar(0));
    
    float *out = image.ptr<float>(0);
@@ -218,12 +195,12 @@ int main(int argc, char **argv)
       sp.patchSize = par.patch_size;
              
       AffineHessianDetector detector(image, p, ap, sp);
-      // t1 = getTime(); g_numberOfPoints = 0;
+      t1 = getTime(); g_numberOfPoints = 0;
       detector.detectPyramidKeypoints(image);
-      // cout << "Detected " << g_numberOfPoints << " keypoints and " << g_numberOfAffinePoints << " affine shapes in " << getTime()-t1 << " sec." << endl;
+      cout << "Detected " << g_numberOfPoints << " keypoints and " << g_numberOfAffinePoints << " affine shapes in " << getTime()-t1 << " sec." << endl;
  
       char suffix[] = ".hesaff.sift";
-      char argv1[] = "pippy.jpg";
+      char argv1[] = "kittens2.jpg";
       int len = strlen(argv1) + strlen(suffix) + 1;
       
       char buf[22];
@@ -232,9 +209,8 @@ int main(int argc, char **argv)
       ofstream out(buf);
 
 
-      
-      detector.exportKeypoints(out, tmp);
-      imwrite("result.jpg", tmp);
-      waitKey(0);
+      detector.exportKeypoints(out);  // detector.exportKeypoints(out, tmp); to generate an image with keypoints overlay
+      // imwrite("result.jpg", tmp);
+      // waitKey(0);
    }
 }
