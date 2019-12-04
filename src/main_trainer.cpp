@@ -5,7 +5,7 @@
 #include <iostream>
 #include <fstream>
 #include <string>  // substr
-#include "vlad.cpp"
+#include "vlad_trainer.cpp"
 using namespace std;
 using namespace cv;
 
@@ -41,7 +41,7 @@ int main(int argc, char* argv[]) {
 		if (w % 102 == 0)
 			cout << "." << flush;
 		else if (w % 1020 == 0)
-	 		cout << w / 1020 << "%" << flush;
+	 		cout << "|" << flush;
 	}
 	cout << "  Done" << endl;
 	return 0;

@@ -111,7 +111,13 @@ public:
    void exportKeypoints(ostream &out)
       {
          out << 128 << endl;
-         out << keys.size() << endl;
+
+         if (keys.size() >= 16)
+            out << keys.size() << endl;
+         else
+            out << 16 << endl;
+         
+
          for (size_t i=0; i<keys.size(); i++)
          {
             Keypoint &k = keys[i];
@@ -131,13 +137,22 @@ public:
                out << " " << int(k.desc[i]);
             out << endl;
          }
+
+         // If K < sampleCount
+         if (keys.size() < 16)
+         {
+            for (int i = 16 - keys.size(); i > 0; i--) {
+               for (int j = 0; j < 128; j++)
+                  out << "0 ";
+               out << endl;
+            }
+         }
       }
 
 
    void exportKeypoints(ostream &out, InputOutputArray &outImage)
       {
          out << 128 << endl;
-         out << keys.size() << endl;
          for (size_t i=0; i<keys.size(); i++)
          {
             Keypoint &k = keys[i];
@@ -225,7 +240,7 @@ int main(int argc, char **argv)
       if (w % 102 == 0)
          cout << "." << flush;
       else if (w % 1020 == 0)
-         cout << w / 1020 << "%" << flush;
+         cout << (w / 1020) << "%" << flush;
    }
    cout << "  Done" << endl;
 }
