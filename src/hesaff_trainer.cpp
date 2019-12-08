@@ -20,6 +20,7 @@
 
 using namespace cv;
 using namespace std;
+#include <string> 
 
 struct HessianAffineParams
 {
@@ -110,7 +111,13 @@ public:
    void exportKeypoints(ostream &out)
       {
          out << 128 << endl;
-         out << keys.size() << endl;
+
+         if (keys.size() >= 16)
+            out << keys.size() << endl;
+         else
+            out << 16 << endl;
+         
+
          for (size_t i=0; i<keys.size(); i++)
          {
             Keypoint &k = keys[i];
@@ -130,13 +137,22 @@ public:
                out << " " << int(k.desc[i]);
             out << endl;
          }
+
+         // If K < sampleCount
+         if (keys.size() < 16)
+         {
+            for (int i = 16 - keys.size(); i > 0; i--) {
+               for (int j = 0; j < 128; j++)
+                  out << "0 ";
+               out << endl;
+            }
+         }
       }
 
 
    void exportKeypoints(ostream &out, InputOutputArray &outImage)
       {
          out << 128 << endl;
-         out << keys.size() << endl;
          for (size_t i=0; i<keys.size(); i++)
          {
             Keypoint &k = keys[i];
@@ -166,51 +182,65 @@ public:
 
 int main(int argc, char **argv)
 {
-   Mat tmp = imread("../test_images/ukbench00003.jpg");
-   Mat image(tmp.rows, tmp.cols, CV_32FC1, Scalar(0));
-   
-   float *out = image.ptr<float>(0);
-   unsigned char *in  = tmp.ptr<unsigned char>(0); 
- 
-   for (size_t i=tmp.rows*tmp.cols; i > 0; i--)
-   {
-      *out = (float(in[0]) + in[1] + in[2])/3.0f;
-      out++;
-      in+=3;
-   }
-   
-   HessianAffineParams par;
-   double t1 = 0;
-   {
-      // copy params 
-      PyramidParams p;
-      p.threshold = par.threshold;
+   ifstream file(argv[1]);
+   string name;
+   int lines;
+   file >> lines;
+   for (int w = 0; w < lines; w++) {
+      file >> name;
+      string path = "../ukbench/full/" + name;
+
+
+      // Author source code
+      Mat tmp = imread(path);
+      Mat image(tmp.rows, tmp.cols, CV_32FC1, Scalar(0));
       
-      AffineShapeParams ap;
-      ap.maxIterations = par.max_iter;
-      ap.patchSize = par.patch_size;
-      ap.mrSize = par.desc_factor;
+      float *out = image.ptr<float>(0);
+      unsigned char *in  = tmp.ptr<unsigned char>(0); 
+    
+      for (size_t i=tmp.rows*tmp.cols; i > 0; i--)
+      {
+         *out = (float(in[0]) + in[1] + in[2])/3.0f;
+         out++;
+         in+=3;
+      }
       
-      SIFTDescriptorParams sp;
-      sp.patchSize = par.patch_size;
+      HessianAffineParams par;
+      double t1 = 0;
+      {
+         // copy params 
+         PyramidParams p;
+         p.threshold = par.threshold;
+         
+         AffineShapeParams ap;
+         ap.maxIterations = par.max_iter;
+         ap.patchSize = par.patch_size;
+         ap.mrSize = par.desc_factor;
+         
+         SIFTDescriptorParams sp;
+         sp.patchSize = par.patch_size;
+                
+         AffineHessianDetector detector(image, p, ap, sp);
+         t1 = getTime();
+         g_numberOfPoints = 0;
+         detector.detectPyramidKeypoints(image);
+         // cout << "Detected " << g_numberOfPoints << " keypoints and " << g_numberOfAffinePoints << " affine shapes in " << getTime()-t1 << " sec." << endl;
+    
+         string suffix = ".hesaff.sift";
+         string filename = name + suffix;
              
-      AffineHessianDetector detector(image, p, ap, sp);
-      t1 = getTime(); g_numberOfPoints = 0;
-      detector.detectPyramidKeypoints(image);
-      cout << "Detected " << g_numberOfPoints << " keypoints and " << g_numberOfAffinePoints << " affine shapes in " << getTime()-t1 << " sec." << endl;
- 
-      char suffix[] = ".hesaff.sift";
-      char argv1[] = "kittens2.jpg";
-      int len = strlen(argv1) + strlen(suffix) + 1;
-      
-      char buf[22];
-      snprintf(buf, len, "%s%s", argv1, suffix);
-      buf[len-1] = 0;      
-      ofstream out(buf);
+         ofstream out(filename);
 
+         detector.exportKeypoints(out);  // detector.exportKeypoints(out, tmp); to generate an image with keypoints overlay
+         // imwrite("result.jpg", tmp);
+         // waitKey(0);
+      }
 
-      detector.exportKeypoints(out);  // detector.exportKeypoints(out, tmp); to generate an image with keypoints overlay
-      // imwrite("result.jpg", tmp);
-      // waitKey(0);
+      // Track progress
+      if (w % 102 == 0)
+         cout << "." << flush;
+      else if (w % 1020 == 0)
+         cout << (w / 1020) << "%" << flush;
    }
+   cout << "  Done" << endl;
 }

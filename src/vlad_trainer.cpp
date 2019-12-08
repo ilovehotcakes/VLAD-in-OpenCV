@@ -94,17 +94,18 @@ private:
 
 	// Todo: Hessian affine-region detector
 
+	// Todo: use opencv SIFT descriptor
 
 	// Compute the fisher vectors
 	// Todo: change inputArray from sift file to actual image, add which descriptor to use, SIFT/SURF/etc.
-	void computeVLAD(Mat &points)
+	void computeVLAD(const Mat &points)
 	{
 		Mat centers; // Center of the clusters k
 		Mat labels = Mat(1, sampleCount, CV_32SC1);  // Mapping each point in points to a k
 		initLabel(labels, points);
 
 		// Compute k-means for each cluster k and label each points
-		kmeans(points, k, labels, TermCriteria(TermCriteria::EPS + TermCriteria::COUNT, 10, 0.001), iterations, KMEANS_USE_INITIAL_LABELS, centers);
+		kmeans(points, k, labels, TermCriteria(TermCriteria::EPS + TermCriteria::COUNT, 300, 0.001), iterations, KMEANS_USE_INITIAL_LABELS, centers);
 		
 		// For each cluster, compute fisher vector
 		Mat fisherV;
