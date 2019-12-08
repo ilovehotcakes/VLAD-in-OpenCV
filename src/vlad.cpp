@@ -2,45 +2,42 @@
 #include <opencv2/highgui.hpp>
 #include <opencv2/imgproc.hpp>
 #include <cmath>
-#include <algorithm>  // sort
 #include <fstream>
-#include <iostream>
 using namespace cv;  // Todo: add scope for cv namespace
 using namespace std;
 
 
 // Todo: add namespace for cv and VLAD
 // Todo: change the interface to match opencv style
-// Todo: switch all the i to k and j to d; i to clusters and j to dimensions
 class VLAD 
 {
 private:
 	const string filename;
-	const int k;
-	const int d;
+	const int clusters;
+	const int dimensions;
 	const int iterations;
 	int sampleCount;
-	Mat finalV;
+	Mat finalV;  // Todo: change this name
 
 
-	Mat readFile() {
+	Mat readFile()
+	{
 		ifstream file(filename);
 		float x;
 		file >> x;
 		file >> x;
 
 		sampleCount = x;  // Number of samples
-		Mat points = Mat::zeros(sampleCount, d, CV_32FC1);
+		Mat points = Mat::zeros(sampleCount, dimensions, CV_32FC1);
 
 		// Reading .hesaff.sift file to memory
 		for (int i = 0; i < sampleCount; i++) {
-			for (int j = 0; j < 5; j++) {
-				file >> x;
-			}
+			for (int j = 0; j < 5; j++)
+				file >> x;  // Skip first 5 values
 
-			for (int j = 0; j < d; j++) {
+			for (int d = 0; d < dimensions; d++) {
 				file >> x;
-				points.at<float>(i, j) = x;
+				points.at<float>(i, d) = x;
 			}
 		}
 
@@ -49,41 +46,39 @@ private:
 	}
 
 	// Initialize and label cluster centroids
-	void initLabel(Mat &labels, const Mat &points) {
-		Mat centars(k, d, CV_32FC1, Scalar(0));
-		int max = 81;  // max seems to be 162 though
+	void initLabel(Mat &labels, const Mat &points)
+	{
+		Mat centars(clusters, dimensions, CV_32FC1, Scalar(0));
+		int max = 81;  // Todo: max seems to be 162 though
 
-		// Initial k centers
-		for (int i = 0; i < k; i++) {
-			for (int j = i * 8; j < (i * 8 + 2); j++) {
-				centars.at<float>(i, j) = max;
-			}
+		// Initial k cluster centers
+		for (int k = 0; k < clusters; k++) {
+			for (int d = k * 8; d < (k * 8 + 2); d++)
+				centars.at<float>(k, d) = max;
 		}
 
 		for (int i = 0; i < sampleCount; i++) {
 			vector<float> vec;  // To rank closest centriod => size = 16
 			vector<float> vp;   // for point => size = 128
 
-			for (int j = 0; j < d; j++) {
-				vp.push_back(points.at<float>(i, j));
-			}
+			for (int d = 0; d < dimensions; d++)
+				vp.push_back(points.at<float>(i, d));
 
-			for (int j = 0; j < k; j++) {
-				vector<float> vc;  // for k
+			for (int k = 0; k < clusters; k++) {
+				vector<float> vc;  // for clusters
 
-				for (int g = 0; g < d; g++) {
-					vc.push_back(centars.at<float>(j, g));
-				}
+				for (int d = 0; d < dimensions; d++)
+					vc.push_back(centars.at<float>(k, d));
 
 				vec.push_back(norm(vp, vc));
 			}
 
 			float min = vec.at(0);
 			int cnt = 0;
-			for (int j = 1; j < k; j++) {
-				if (vec.at(j) <= min) {
-					min = vec.at(j);
-					cnt = j;
+			for (int k = 1; k < clusters; k++) {
+				if (vec.at(k) <= min) {
+					min = vec.at(k);
+					cnt = k;
 				}
 			}
 
@@ -91,31 +86,31 @@ private:
 		}
 	}
 
-
-	// Todo: Hessian affine-region detector
+	
+	// Todo: Use any descriptor
 
 
 	// Compute the fisher vectors
 	// Todo: change inputArray from sift file to actual image, add which descriptor to use, SIFT/SURF/etc.
-	void computeVLAD(Mat &points)
+	void computeVLAD(const Mat &points)
 	{
 		Mat centers; // Center of the clusters k
-		Mat labels = Mat(1, sampleCount, CV_32SC1);  // Mapping each point in points to a k
-		initLabel(labels, points);
+		Mat labels = Mat(1, sampleCount, CV_32SC1);  // Mapping each point in points to a cluster
+		initLabel(labels, points);  // Todo: can use codebook
 
 		// Compute k-means for each cluster k and label each points
-		kmeans(points, k, labels, TermCriteria(TermCriteria::EPS + TermCriteria::COUNT, 10, 0.001), iterations, KMEANS_USE_INITIAL_LABELS, centers);
+		kmeans(points, clusters, labels, TermCriteria(TermCriteria::EPS + TermCriteria::COUNT, 300, 0.001), iterations, KMEANS_USE_INITIAL_LABELS, centers);
 		
 		// For each cluster, compute fisher vector
 		Mat fisherV;
 		centers.copyTo(fisherV);
 		for (int i = 0; i < sampleCount; i++) {
 			int localCluster = labels.at<int>(i);
-			for (int j = 0; j < d; j++) {
-				if (centers.at<float>(localCluster, j) < points.at<float>(i, j))
-					fisherV.at<float>(localCluster, j) += points.at<float>(i, j);
+			for (int d = 0; d < dimensions; d++) {
+				if (centers.at<float>(localCluster, d) < points.at<float>(i, d))
+					fisherV.at<float>(localCluster, d) += points.at<float>(i, d);
 				else
-					fisherV.at<float>(localCluster, j) -= points.at<float>(i, j);
+					fisherV.at<float>(localCluster, d) -= points.at<float>(i, d);
 			}
 		}
 
@@ -124,15 +119,16 @@ private:
 	}
 
 	// Helper function for drawVLAD
-	Scalar rOrB(float value) {
+	Scalar rOrB(float value)
+	{
 		// Red if positive, else blue
 		return (value > 0)? Scalar(0, 0, 255) : Scalar(255, 0, 0);
 	}
 
 
 public:
-	VLAD(const string filename, const int k = 16, const int dimensions = 128, const int iterations = 10)
-		: filename(filename), k(k), d(dimensions), iterations(iterations)
+	VLAD(const string filename, const int k = 16, const int d = 128, const int it = 10)
+		: filename(filename), clusters(k), dimensions(d), iterations(it)
 	{
 		Mat inputArray = readFile();
 		computeVLAD(inputArray);
@@ -149,20 +145,17 @@ public:
 
 
 		// Translate the range of the dimensions to -0.5 to 0.5
-		for (int i = 0; i < k; i++) {
-			for (int j = 0; j < d; j++) {
-				// cout << finalV.at<float>(i, j) << "  ";
-				if (finalV.at<float>(i, j) == 0)
+		for (int k = 0; k < clusters; k++) {
+			for (int d = 0; d < dimensions; d++) {
+				if (finalV.at<float>(k, d) == 0)
 					;
-				else {
-					finalV.at<float>(i, j) -= 0.02;  // Todo: parameterize this
-					// cout << finalV.at<float>(i, j) << endl;
-				}
+				else
+					finalV.at<float>(k, d) -= 0.02;  // Todo: parameterize this
 			}
 		}
 
 
-		for (int i = 0; i < k; i++) {
+		for (int i = 0; i < clusters; i++) {
 			int counter = 0;
 			for (int r = 0; r < 4; r++) {
 				for (int c = 0; c < 4; c++) {
@@ -209,21 +202,19 @@ public:
 		return finalV;
 	}
 
+	// Return the requested cluster as a Mat
+	Mat getVLAD(const int k)
+	{
+		if (k >= 0 && k < clusters) {
+			Mat subVLAD;
+			for (int d = 0; d < dimensions; d++)
+				subVLAD.push_back(finalV.at<float>(k, d));
+			return subVLAD;
+		}
+	}
+
 	void compareVLAD(VLAD &comp)
 	{
-		for (int i = 0; i < k; i++) {
-			vector<float> interm;
-			float sum = 0;
-			for (int j = 0; j < d; j++) {
-				interm.push_back(pow(finalV.at<float>(2, j) - comp.getVLAD().at<float>(i, j), 2));
-			}
-			
-			sort(interm.begin(), interm.end());
-
-			for (int j = 0; j < 128 ; j++) {
-				sum += interm.at(j);
-			}
-			cout << i << " \t" << sqrt(sum) << endl;
-		}
+		// Todo: use knn
 	}
 };
