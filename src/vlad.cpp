@@ -96,10 +96,10 @@ private:
 	{
 		Mat centers; // Center of the clusters k
 		Mat labels = Mat(1, sampleCount, CV_32SC1);  // Mapping each point in points to a cluster
-		initLabel(labels, points);  // Todo: can use codebook
+		//initLabel(labels, points);  // Todo: can use codebook
 
 		// Compute k-means for each cluster k and label each points
-		kmeans(points, clusters, labels, TermCriteria(TermCriteria::EPS + TermCriteria::COUNT, 300, 0.001), iterations, KMEANS_USE_INITIAL_LABELS, centers);
+		kmeans(points, clusters, labels, TermCriteria(TermCriteria::EPS + TermCriteria::COUNT, 10, 0.001), iterations, KMEANS_PP_CENTERS, centers);
 		
 		// For each cluster, compute fisher vector
 		Mat fisherV;
@@ -121,7 +121,7 @@ private:
 	// Helper function for drawVLAD
 	Scalar rOrB(float value)
 	{
-		// Red if positive, else blue
+		// Todo: Red if positive, else blue
 		return (value > 0)? Scalar(0, 0, 255) : Scalar(255, 0, 0);
 	}
 
@@ -138,7 +138,7 @@ public:
 	void drawVLAD(int resolution = 32)
 	{
 		int sqSize = resolution;
-		double rad = sqSize * 6;
+		double rad = sqSize * 8;
 		double slantedRad = rad * cos(CV_PI / 4);
 		int thickness = 1;
 		Mat img(sqSize * 4, sqSize * 64, CV_8UC3, Scalar::all(255));

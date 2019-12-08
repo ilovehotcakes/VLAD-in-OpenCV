@@ -27,10 +27,11 @@ private:
 		// Compute a VLAD descriptor for each images and store in vector
 		for (int w = 0; w < lines; w++) {
 			file >> name;
-			string path = "../ukbench_sift/" + name;
+			string path = "../sift/" + name;
 
 			// Compute VLAD descriptor
 			VLAD vlad(path);
+			vlad.drawVLAD();
 			
 			// Store VLAD in the words
 			for (int k = 0; k < clusters; k++) {
@@ -40,10 +41,12 @@ private:
 		}
 		
 		// Compute k-means. there needs to be at least 16 .sift files to train
-		//kmeans(words, kVisualWords, labels, TermCriteria(TermCriteria::EPS + TermCriteria::COUNT, 10, 0.1), 10, KMEANS_PP_CENTERS, centers);
+		Mat labels;
+
+		//kmeans(words, kVisualWords, labels, TermCriteria(TermCriteria::EPS + TermCriteria::COUNT, 10, 0.001), 10, KMEANS_PP_CENTERS, codebook);
 		BOWKMeansTrainer bow(kVisualWords);
 		codebook = bow.cluster(words);
-		
+
 				
 		cout << "start" << endl;
 		FileStorage fs("dictionary.yml", FileStorage::WRITE);
@@ -54,9 +57,18 @@ private:
 
 
 public:
-	VLAD_trainer(const string dir, const int k) : dir(dir), kVisualWords(kVisualWords) {
+	VLAD_trainer(const string dir, const int k = 16) : dir(dir), kVisualWords(k) {
 		train();
 	}
 
 	//write codebook to disk
+	void write2disk()
+	{
+
+	}
+
+	Mat getBook()
+	{
+		return codebook;
+	}
 };
