@@ -1,6 +1,5 @@
 #include "vlad.cpp"
 #include <opencv2/features2d.hpp>
-#include <fstream>
 #include <iostream>
 using namespace cv;  // Todo: add scope for cv namespace
 using namespace std;
@@ -10,62 +9,52 @@ using namespace std;
 class VLAD_trainer
 {
 private:
-	const string dir;
-	const int kVisualWords;
+	string dir;
+	int kVisualWords;
 	Mat codebook;
-	const int clusters = 16;
-	const int dimensions = 128;
-
-	void train() {
-		ifstream file(dir);
-		string name;
-		int lines;
-		file >> lines;
-
-		Mat words(lines * clusters, dimensions, CV_32FC1);  // Vector that temporarily holds all the VLAD descriptors
-
-		// Compute a VLAD descriptor for each images and store in vector
-		for (int w = 0; w < lines; w++) {
-			file >> name;
-			string path = "../sift/" + name;
-
-			// Compute VLAD descriptor
-			VLAD vlad(path);
-			vlad.drawVLAD();
-			
-			// Store VLAD in the words
-			for (int k = 0; k < clusters; k++) {
-				for (int d = 0; d < dimensions; d++)
-					words.at<float>(w * clusters + k, d) = vlad.getVLAD().at<float>(k, d);
-			}
-		}
-		
-		// Compute k-means. there needs to be at least 16 .sift files to train
-		Mat labels;
-
-		//kmeans(words, kVisualWords, labels, TermCriteria(TermCriteria::EPS + TermCriteria::COUNT, 10, 0.001), 10, KMEANS_PP_CENTERS, codebook);
-		BOWKMeansTrainer bow(kVisualWords);
-		codebook = bow.cluster(words);
-
-				
-		cout << "start" << endl;
-		FileStorage fs("dictionary.yml", FileStorage::WRITE);
-		fs << "vocabulary" << codebook;
-		fs.release();
-		cout << "done" << endl;
-	}
 
 
 public:
-	VLAD_trainer(const string dir, const int k = 16) : dir(dir), kVisualWords(k) {
-		train();
+	VLAD_trainer() {}
+	~VLAD_trainer() {}
+
+
+	void compute(const string dir, const int k = 16) {
+		kVisualWords = k;
+		ifstream file(dir);
+		string filename;
+		Mat allWords;  // Vector that temporarily holds all the SIFT/SURF descriptors
+		
+		// Compute SIFT/SURF/etc. descriptors for each image
+		while (!file.eof()) {
+			file >> filename;
+			string path = "../test_images/" + filename;  // Todo: param path
+
+			// Compute descriptors
+			Ptr<Feature2D> detector = cv::xfeatures2d::SIFT::create();
+			Mat img, desc;
+			vector<KeyPoint> keypoints;
+			img = imread(path);
+			detector->detectAndCompute(img, Mat(), keypoints, desc);
+
+			// Store VLAD in the words
+			allWords.push_back(desc);
+		}
+		
+		// Compute k-means. There needs to be at least kVisualWords of lines to train
+		BOWKMeansTrainer bow(kVisualWords);
+		codebook = bow.cluster(allWords);
 	}
+
 
 	//write codebook to disk
-	void write2disk()
+	void write()
 	{
-
+		FileStorage fs("codebook.yml", FileStorage::WRITE);
+		fs << "codebook" << codebook;
+		fs.release();
 	}
+
 
 	Mat getBook()
 	{
