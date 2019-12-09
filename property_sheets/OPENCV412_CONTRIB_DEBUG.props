@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ImportGroup Label="PropertySheets" />
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup>
+    <_PropertySheetDisplayName>OPENCV4_NONFREE_DEBUG</_PropertySheetDisplayName>
+  </PropertyGroup>
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <AdditionalIncludeDirectories>$(OPENCV_DIR)\..\..\include</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <AdditionalLibraryDirectories>$(OPENCV_DIR)\lib</AdditionalLibraryDirectories>
+      <AdditionalDependencies>opencv_aruco412d.lib;opencv_bgsegm412d.lib;opencv_bioinspired412d.lib;opencv_calib3d412d.lib;opencv_ccalib412d.lib;opencv_core412d.lib;opencv_datasets412d.lib;opencv_dnn_objdetect412d.lib;opencv_superres412d.lib;opencv_dnn412d.lib;opencv_dpm412d.lib;opencv_face412d.lib;opencv_features2d412d.lib;opencv_flann412d.lib;opencv_fuzzy412d.lib;opencv_gapi412d.lib;opencv_hfs412d.lib;opencv_highgui412d.lib;opencv_img_hash412d.lib;opencv_imgcodecs412d.lib;opencv_imgproc412d.lib;opencv_line_descriptor412d.lib;opencv_ml412d.lib;opencv_objdetect412d.lib;opencv_optflow412d.lib;opencv_phase_unwrapping412d.lib;opencv_photo412d.lib;opencv_plot412d.lib;opencv_quality412d.lib;opencv_reg412d.lib;opencv_rgbd412d.lib;opencv_saliency412d.lib;opencv_shape412d.lib;opencv_stereo412d.lib;opencv_stitching412d.lib;opencv_structured_light412d.lib;opencv_surface_matching412d.lib;opencv_text412d.lib;opencv_tracking412d.lib;opencv_video412d.lib;opencv_videoio412d.lib;opencv_videostab412d.lib;opencv_xfeatures2d412d.lib;opencv_ximgproc412d.lib;opencv_xobjdetect412d.lib;opencv_xphoto412d.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup />
+</Project>
