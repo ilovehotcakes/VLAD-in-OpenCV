@@ -22,55 +22,16 @@
 #include <opencv2/core.hpp>
 #include <opencv2/highgui.hpp>
 #include <opencv2/xfeatures2d.hpp>
-
-using namespace cv;
-using namespace std;
- 
-// int main()
-// {
-//     Mat image1 = imread( "../test_images/pippy.jpg", IMREAD_GRAYSCALE);
-    
-//     if( !image1.data)
-//     { 
-//         cout<< " --(!) Error reading images " << endl; 
-//         return -1; 
-//     }
-
-//     //-- Step 1: Detect the keypoints using SURF Detector
-//     int minHessian = 400;
-//     Ptr<Feature2D> detector = xfeatures2d::SURF::create( minHessian );
-//     std::vector<KeyPoint> keypoints_1;
-//     detector->detect( image1, keypoints_1 );
-
-//     //--Step2: Draw keypoints
-//     Mat img_keypoints_surf; 
-//     drawKeypoints( image1, keypoints_1, img_keypoints_surf, Scalar::all(-1), DrawMatchesFlags::DEFAULT );
-
-//     //--Step3: Show detected (drawn) keypoints
-//     imshow("Keypoints 1", img_keypoints_surf );
-//     waitKey(0);
-
-//     return 0;
-// }
-
-
-
-
-
-//BOWKMeans Recogniser
-#include <opencv2/imgproc.hpp>
+#include <opencv2/imgproc.hpp>  // line, circle
 #include <unistd.h>
 #include <string>
 #include <fstream>
 #include <vector>
-
 using namespace cv;
 using namespace std;
 
-
-Scalar rOrB(float value)
-{
-	return (value > 0) ? Scalar(0, 0, 255) : Scalar(255, 0, 0);
+Scalar rOrB(float value) {
+    return (value > 0)? Scalar(255, 0, 0) : Scalar(0, 0, 255);
 }
 
 
@@ -79,7 +40,6 @@ int main()
     // Loading vocabulary.yml into memory(Mat vocabulary)
 	Mat vocabulary;
 	FileStorage fs1("vocabulary.yml", FileStorage::READ);
-	cout << "Reading Vocabulary from file";
 	fs1["vocabulary"] >> vocabulary;
 	fs1.release();
 
@@ -98,7 +58,7 @@ int main()
     
 
     while(!f1.eof())
-    {   
+    {
         Mat finalV;
 
         // Compute image SIFT desc
@@ -118,31 +78,28 @@ int main()
 
 
         // Convert desc1 to desc1 as float
-        Mat desc1_32f;
-        desc1.convertTo(desc1_32f, CV_32FC1);
+        // Mat desc1_32f;
+        // desc1.convertTo(desc1_32f, CV_32FC1);
 
 
         // Compute VLAD
         vector<DMatch> matches;
-        matcher->match(desc1_32f, matches); //desc1 contains descriptors for each image
+        matcher->match(desc1, matches); //desc1 contains descriptors for each image
         
         
-        Mat responseHist(vocabulary.rows, desc1_32f.cols, CV_32FC1, Scalar::all(0.0));
-        for( size_t i = 0; i < matches.size(); i++ )
+        Mat responseHist(16, 128, CV_32FC1, Scalar::all(0.0));  // Todo: rename this to fisherVec
+        int sampleCount = matches.size();
+        for(int i = 0; i < sampleCount; i++)
         {
             int queryIdx = matches[i].queryIdx;
             int trainIdx = matches[i].trainIdx; // cluster index
-            CV_Assert(queryIdx == (int)i);
-            Mat residual;
-            
-            subtract(desc1_32f.row(queryIdx), vocabulary.row(trainIdx), residual, noArray(), CV_32F);
-            add(responseHist.row(trainIdx), residual, responseHist.row(trainIdx), noArray(), responseHist.type());
+            for (int d = 0; d < 128; d++)  // Todo: para this
+                responseHist.at<float>(trainIdx, d) += (vocabulary.at<float>(trainIdx, d) - desc1.at<float>(queryIdx, d));
         }
-        responseHist /= norm(responseHist,NORM_L2, noArray());  // L2-norm
-        
-        // cout << "\n  ResponseHist:" << responseHist.rows << ", " << responseHist.cols << ", " << responseHist.type() << ", " << responseHist.channels() << endl;
-        // if(responseHist.rows!=0)
-        //     desc.push_back(responseVector);
+
+        // L2-norm
+        normalize(responseHist, responseHist);
+
         
         FileStorage fs2(imgName + ".vlad", FileStorage::WRITE);  // Store to disk
         fs2 << "responseHist" << responseHist;
