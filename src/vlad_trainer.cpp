@@ -1,11 +1,11 @@
 #include "vlad.cpp"
 #include <opencv2/features2d.hpp>
 #include <iostream>
+
 using namespace cv;  // Todo: add scope for cv namespace
 using namespace std;
 
 
-// Todo: 
 class VLAD_trainer
 {
 private:
@@ -18,6 +18,20 @@ public:
 	~VLAD_trainer() {}
 
 
+	void saveDesc(const string filename, const Mat &finalMat)
+	{
+		ofstream f(filename + ".sift");
+		int rows = finalMat.rows;
+		int dimensions = finalMat.cols;
+		for (int i = 0; i < rows; i++) {
+			for (int d = 0; d < dimensions; d++)
+				f << finalMat.at<float>(i, d) << " ";
+			f << endl;
+		}
+		f.close();
+	}
+
+
 	void compute(const string dir, Ptr<Feature2D> detector) {
 		ifstream file(dir);
 		string filename;
@@ -26,13 +40,14 @@ public:
 		// Compute SIFT/SURF/etc. descriptors for each image
 		while (!file.eof()) {
 			file >> filename;
-			string path = "../holiday/" + filename;  // Todo: param path
+			string path = "../ukbench/" + filename;  // Todo: param path
 
 			// Compute descriptors
 			Mat img, desc;
 			vector<KeyPoint> keypoints;
 			img = imread(path);
 			detector->detectAndCompute(img, Mat(), keypoints, desc);
+			saveDesc("../sift/" + filename, desc);
 
 			// Store VLAD in the words
 			allWords.push_back(desc);
@@ -57,11 +72,18 @@ public:
 		fs.release();
 	}
 
+
 	void saveDesc(const string filename)
 	{
-		FileStorage fs(filename + ".yml", FileStorage::WRITE);
-		fs << "allWords" << allWords;
-		fs.release();
+		ofstream f(filename);
+		int rows = allWords.rows;
+		int dimensions = allWords.cols;
+		for (int i = 0; i < rows; i++) {
+			for (int d = 0; d < dimensions; d++)
+				f << (uchar) allWords.at<float>(i, d) << ' ';
+			f << endl;
+		}
+		f.close();
 	}
 
 	Mat getBook()

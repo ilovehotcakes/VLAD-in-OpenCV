@@ -177,7 +177,7 @@ public:
 
 
 	// Store .vlad to disk
-	void write() {
+	void write(const string path) {  // Todo: add path
 		FileStorage fs(filename + ".vlad", FileStorage::WRITE);
 		fs << "VLAD-SURF" << vladDesc;
 		fs.release();
