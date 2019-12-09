@@ -7,32 +7,35 @@
 #include <vector>
 using namespace std;
 
+
 void usage()
 {
-    // Todo
+    cout << "directory  filename" << endl;
 }
 
-void read_directory(string name, vector<string> &v)
+void read_directory(string name, vector<string> &vec)
 {
-    DIR* dirp = opendir(name.c_str());
+    DIR* dir = opendir(name.c_str());
     struct dirent * dp;
-    while ((dp = readdir(dirp)) != NULL) {
-        v.push_back(dp->d_name);
+    while ((dp = readdir(dir)) != NULL) {
+        vec.push_back(dp->d_name);
     }
-    closedir(dirp);
+    closedir(dir);
 }
 
 
 int main(int argc, char* argv[]) {
-	vector<string> v;
-	read_directory(argv[1], v);
+    if (argc < 4)
+        usage();
 
-	// Todo: push_front size
-	ofstream output_file("./list.txt");
-    ostream_iterator<string> output_iterator(output_file, "\n");
-    copy(v.begin() + 2, v.end(), output_iterator);
-	cout << "There are " << v.size() - 2 << " files in this dir." << endl;
+	vector<string> vec;
+	read_directory(argv[1], vec);
 
 	
+	ofstream output_file(argv[2]);
+    ostream_iterator<string> output_iterator(output_file, "\n");
+    copy(vec.begin() + 2, vec.end(), output_iterator);
+	cout << "There are " << vec.size() - 2 << " files in this dir." << endl;
+
 	return 0;
 }

@@ -75,7 +75,7 @@ private:
 		normalize(fisherVec, vladDesc);
 	}
 
-	// Helper function for drawVLAD
+	// Helper function for draw
 	Scalar rOrB(float value)
 	{
 		// Red if positive, else blue
@@ -105,7 +105,7 @@ public:
 
 
 	// Todo: parameterize the line thickness, and center dot radius
-	void drawVLAD(int resolution = 32)
+	void draw(int resolution = 32)
 	{
 		int sqSize = resolution;
 		double rad = sqSize * 6;

@@ -19,7 +19,7 @@ public:
 	~VLAD_trainer() {}
 
 
-	void compute(const string dir, const int k = 16) {
+	void compute(const string dir, Ptr<Feature2D> detector, const int k = 16) {
 		kVisualWords = k;
 		ifstream file(dir);
 		string filename;
@@ -31,7 +31,6 @@ public:
 			string path = "../test_images/" + filename;  // Todo: param path
 
 			// Compute descriptors
-			Ptr<Feature2D> detector = cv::xfeatures2d::SIFT::create();
 			Mat img, desc;
 			vector<KeyPoint> keypoints;
 			img = imread(path);
@@ -39,6 +38,7 @@ public:
 
 			// Store VLAD in the words
 			allWords.push_back(desc);
+			cout << "\t" << filename << endl;  // Todo: debuguse
 		}
 		
 		// Compute k-means. There needs to be at least kVisualWords of lines to train
@@ -48,9 +48,9 @@ public:
 
 
 	//write codebook to disk
-	void write()
+	void write(const string filename)
 	{
-		FileStorage fs("codebook.yml", FileStorage::WRITE);
+		FileStorage fs(filename + ".yml", FileStorage::WRITE);
 		fs << "codebook" << codebook;
 		fs.release();
 	}
