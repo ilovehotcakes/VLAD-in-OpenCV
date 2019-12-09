@@ -7,7 +7,8 @@ int main(int argc, char* argv[]) {
 
 	// // Training kittens1, kittens2, pippy, ukbench00000-00003
 	// VLAD_trainer jason;
-    // jason.compute("list.txt", detector, 16);
+    // jason.compute("list.txt", detector);
+    // jason.train(16);
     // jason.write("codebook");
     // cout << "Training complete.." << endl;
 
@@ -24,19 +25,18 @@ int main(int argc, char* argv[]) {
 
     // Training INRIA Holiday dataset with 16 visual words
 	VLAD_trainer nelson;
-    nelson.compute("holiday_list.txt", 16);
+    nelson.compute("holiday_list.txt", detector);
+    nelson.train(16);
     nelson.write("holiday_16");
     cout << "Training complete(k = 16).." << endl;
 
     // Training INRIA Holiday dataset with 64 visual words
-    VLAD_trainer jason;
-    jason.compute("holiday_list.txt", 64);
-    jason.write("holiday_64");
-    cout << "Training complete(k = 64).." << endl;
+    nelson.train(64);
+    nelson.write("holiday_64");
+    nelson.saveDesc("holiday_SIFT");
 
     // // Testing VLAD-SIFT
-    // Mat codebook = jason.getBook();
-	// VLAD vlad("../holiday/100000.jpg", codebook, detector);
+	// VLAD vlad("../holiday/100000.jpg", "holiday_16.yml", detector);
 	// vlad.draw();
 	// waitKey(0);
     

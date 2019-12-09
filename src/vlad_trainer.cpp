@@ -10,25 +10,23 @@ class VLAD_trainer
 {
 private:
 	string dir;
-	int kVisualWords;
 	Mat codebook;
-
+	Mat allWords;  // Vector that temporarily holds all the SIFT/SURF descriptors
 
 public:
 	VLAD_trainer() {}
 	~VLAD_trainer() {}
 
 
-	void compute(const string dir, Ptr<Feature2D> detector, const int k = 16) {
-		kVisualWords = k;
+	void compute(const string dir, Ptr<Feature2D> detector) {
 		ifstream file(dir);
 		string filename;
-		Mat allWords;  // Vector that temporarily holds all the SIFT/SURF descriptors
+		// Mat allWords;  // Vector that temporarily holds all the SIFT/SURF descriptors
 		
 		// Compute SIFT/SURF/etc. descriptors for each image
 		while (!file.eof()) {
 			file >> filename;
-			string path = "../test_images/" + filename;  // Todo: param path
+			string path = "../holiday/" + filename;  // Todo: param path
 
 			// Compute descriptors
 			Mat img, desc;
@@ -40,8 +38,12 @@ public:
 			allWords.push_back(desc);
 			cout << "\t" << filename << endl;  // Todo: debuguse
 		}
-		
-		// Compute k-means. There needs to be at least kVisualWords of lines to train
+	}
+
+
+	// Compute k-means. There needs to be at least kVisualWords of lines to train
+	void train(const int kVisualWords = 16)
+	{
 		BOWKMeansTrainer bow(kVisualWords);
 		codebook = bow.cluster(allWords);
 	}
@@ -55,6 +57,12 @@ public:
 		fs.release();
 	}
 
+	void saveDesc(const string filename)
+	{
+		FileStorage fs(filename + ".yml", FileStorage::WRITE);
+		fs << "allWords" << allWords;
+		fs.release();
+	}
 
 	Mat getBook()
 	{
