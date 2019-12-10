@@ -9,12 +9,13 @@ using namespace std;
 class VLAD_trainer
 {
 private:
-	string dir;
+	const string dir;
 	Mat codebook;
 	Mat allWords;  // Vector that temporarily holds all the SIFT/SURF descriptors
 
 public:
-	VLAD_trainer() {}
+	VLAD_trainer(const string dir) : dir(dir) {}
+	VLAD_trainer() : dir("") {}
 	~VLAD_trainer() {}
 
 
@@ -32,8 +33,8 @@ public:
 	}
 
 
-	void compute(const string dir, Ptr<Feature2D> detector) {
-		ifstream file(dir);
+	void compute(const string list, Ptr<Feature2D> detector) {
+		ifstream file(list);
 		string filename;
 		// Mat allWords;  // Vector that temporarily holds all the SIFT/SURF descriptors
 		
@@ -59,6 +60,7 @@ public:
 	// Compute k-means. There needs to be at least kVisualWords of lines to train
 	void train(const int kVisualWords = 16)
 	{
+		// Todo: clear codebook for re training
 		BOWKMeansTrainer bow(kVisualWords);
 		codebook = bow.cluster(allWords);
 	}
@@ -72,19 +74,6 @@ public:
 		fs.release();
 	}
 
-
-	void saveDesc(const string filename)
-	{
-		ofstream f(filename);
-		int rows = allWords.rows;
-		int dimensions = allWords.cols;
-		for (int i = 0; i < rows; i++) {
-			for (int d = 0; d < dimensions; d++)
-				f << (uchar) allWords.at<float>(i, d) << ' ';
-			f << endl;
-		}
-		f.close();
-	}
 
 	Mat getBook()
 	{
