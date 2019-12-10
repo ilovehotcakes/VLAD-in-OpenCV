@@ -4,7 +4,6 @@
 #include <opencv2/xfeatures2d.hpp>
 #include <fstream>
 #include <vector>
-#include <math.h>  // sin, cos
 using namespace cv;  // Todo: add scope for cv namespace
 using namespace std;
 
@@ -52,13 +51,15 @@ private:
         vector<DMatch> matches;
         matcher->match(desc, matches); //desc contains descriptors for each image
         
+
+		// Todo: what to do when codebook kVisualWords != VLAD k clusters
+		
+
 		// Compute VLAD descriptors
         Mat fisherVec(clusters, dimensions, CV_32FC1, Scalar::all(0.0));
         int sampleCount = matches.size();
         for(int i = 0; i < sampleCount; i++)
         {
-			// Todo: Need to rate top k matches if kvisualwords is > clusters
-			// voting vector<int>(clusters)
             int queryIdx = matches[i].queryIdx;
             int trainIdx = matches[i].trainIdx;
             for (int d = 0; d < dimensions; d++)
@@ -105,7 +106,8 @@ public:
 	{	
 		int sqSize = resolution;
 		double rad = resolution * resolution / 6;
-		int lpd = dimensions / clusters; // linesPerDot
+		int hms;                          // howManySq
+		int lpd = dimensions / clusters;  // linesPerDot
 		int thickness = resolution / 32;
 		Mat img(sqSize * 4, sqSize * 4 * clusters, CV_8UC3, Scalar::all(255));
 
@@ -126,7 +128,7 @@ public:
 					circle(img, dotCtr, resolution / 16, Scalar(0), thickness * -(resolution / 32));
 				}
 			}
-			// Drawing border between each cluster square
+			// Drawing borders between each cluster square
 			line(img, Point(4 * k * sqSize, 0), Point(4 * k * sqSize, 4 * sqSize), Scalar(0), thickness);
 		}
 		// Drawing the rest of the border

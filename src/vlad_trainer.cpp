@@ -11,7 +11,6 @@ class VLAD_trainer
 private:
 	const string dir;
 	Mat codebook;
-	Mat allWords;  // Vector that temporarily holds all the SIFT/SURF descriptors
 
 public:
 	VLAD_trainer(const string dir) : dir(dir) {}
@@ -33,10 +32,10 @@ public:
 	}
 
 
-	void compute(const string list, Ptr<Feature2D> detector) {
+	void train(const string list, Ptr<Feature2D> detector, const int kVisualWords = 16, const int flag = 0) {
 		ifstream file(list);
 		string filename;
-		// Mat allWords;  // Vector that temporarily holds all the SIFT/SURF descriptors
+		Mat allWords;  // Vector that temporarily holds all the SIFT/SURF descriptors
 		
 		// Compute SIFT/SURF/etc. descriptors for each image
 		while (!file.eof()) {
@@ -48,21 +47,17 @@ public:
 			vector<KeyPoint> keypoints;
 			img = imread(path);
 			detector->detectAndCompute(img, Mat(), keypoints, desc);
-			//saveDesc("../sift/" + filename, desc);
+
+			if (flag == 1)
+				saveDesc("../sift/" + filename, desc);
 
 			// Store VLAD in the words
 			allWords.push_back(desc);
-			cout << "\t" << filename << endl;  // Todo: debuguse
+			
+			// Compute k-means. There needs to be at least kVisualWords of lines to train
+			BOWKMeansTrainer bow(kVisualWords);
+			codebook = bow.cluster(allWords);
 		}
-	}
-
-
-	// Compute k-means. There needs to be at least kVisualWords of lines to train
-	void train(const int kVisualWords = 16)
-	{
-		// Todo: clear codebook for re training
-		BOWKMeansTrainer bow(kVisualWords);
-		codebook = bow.cluster(allWords);
 	}
 
 
