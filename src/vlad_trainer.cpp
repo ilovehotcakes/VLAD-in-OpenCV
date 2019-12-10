@@ -41,14 +41,14 @@ public:
 		// Compute SIFT/SURF/etc. descriptors for each image
 		while (!file.eof()) {
 			file >> filename;
-			string path = "../ukbench/" + filename;  // Todo: param path
+			string path = "../test_images/" + filename;  // Todo: param path
 
 			// Compute descriptors
 			Mat img, desc;
 			vector<KeyPoint> keypoints;
 			img = imread(path);
 			detector->detectAndCompute(img, Mat(), keypoints, desc);
-			saveDesc("../sift/" + filename, desc);
+			//saveDesc("../sift/" + filename, desc);
 
 			// Store VLAD in the words
 			allWords.push_back(desc);
