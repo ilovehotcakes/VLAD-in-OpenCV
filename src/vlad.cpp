@@ -14,44 +14,45 @@ using namespace std;
 class VLAD 
 {
 private:
-	const string filename;
-	const int clusters;
-	const int dimensions;
-	Ptr<Feature2D> detector;
-	Mat vladDesc;
+	const string filename;    // Path or filename
+	const int clusters;       // Cluster k
+	const int dimensions;     // Dimesion d
+	Ptr<Feature2D> detector;  // Type of detector to be used
+	Mat vladDesc;             // Final VLAD descriptor
 
 
-	// Loading cookbook.yml into memory(Mat codebook)
+	// Loading cookbook into memory(Mat codebook)
 	Mat loadBook(const string dictionary)
 	{
 		FileStorage fs(dictionary, FileStorage::READ);
 		Mat codebook;
 		fs["codebook"] >> codebook;
 		fs.release();
-
 		return codebook;
 	}
 
 
-	// Compute the fisher vectors
+	// Compute the fisher vectors and normalized to VLAD
 	void computeVLAD(const Mat &codebook)
 	{
-		// Use Opencv BOWImgDescriptorExtractor to match detected points to vocab clusters
+		// Use Opencv BOWImgDescriptorExtractor to match detected
+		// points to codebook vocabulary
 		Ptr<DescriptorExtractor> extractor = detector;
 		Ptr<DescriptorMatcher> matcher = DescriptorMatcher::create("BruteForce");
 		BOWImgDescriptorExtractor bowide(extractor, matcher);
 		bowide.setVocabulary(codebook);
 		
-		// Compute SIFT/SURF descriptors
+		// Compute SIFT/SURF/etc. descriptors
         Mat img, desc;
         vector<KeyPoint> keypoints;
         img = imread(filename);
         detector->detectAndCompute(img, Mat(), keypoints, desc);
 
-        // Compute VLAD descriptors
+        // Match each SIFT/SURF/etc. desc to a vocab from codebook
         vector<DMatch> matches;
         matcher->match(desc, matches); //desc contains descriptors for each image
         
+		// Compute VLAD descriptors
         Mat fisherVec(clusters, dimensions, CV_32FC1, Scalar::all(0.0));
         int sampleCount = matches.size();
         for(int i = 0; i < sampleCount; i++)
@@ -77,6 +78,7 @@ private:
 
 
 public:
+	// VLAD constructor that takes a path or file and load the codebook
 	VLAD(const string f, const string dic,
 		Ptr<Feature2D> detector, const int k = 16, const int d = 128)
 		: filename(f), clusters(k), dimensions(d), detector(detector)
@@ -86,6 +88,7 @@ public:
 	}
 
 
+	// VLAD constructor that takes a Mat codebook
 	VLAD(const string f, Mat &dic,
 		Ptr<Feature2D> detector, const int k = 16, const int d = 128)
 		: filename(f), clusters(k), dimensions(d), detector(detector)
@@ -142,7 +145,7 @@ public:
 	}
 
 
-	// Store .vlad to disk
+	// Store VLAD to disk
 	void write(const string path = "") {  // Todo: add path
 		FileStorage fs(filename + ".vlad", FileStorage::WRITE);
 		fs << "VLAD" << vladDesc;
