@@ -1,3 +1,5 @@
+// Only able to use codebook that has kVisualWords = clusters
+
 #include <opencv2/core.hpp>
 #include <opencv2/highgui.hpp>
 #include <opencv2/imgproc.hpp>
@@ -9,7 +11,6 @@ using namespace std;
 
 
 // Todo: add namespace for cv and VLAD
-// Todo: change the interface to match opencv style
 class VLAD 
 {
 private:
@@ -78,6 +79,13 @@ private:
 	}
 
 
+	// Helper function for draw
+	int howManySq(int value)
+	{
+		return (value % 128 == 0)? (value / 128) : (value / 128 + 1);
+	}
+
+
 public:
 	// VLAD constructor that takes a path or file and load the codebook
 	VLAD(const string f, const string dic,
@@ -89,7 +97,7 @@ public:
 	}
 
 
-	// VLAD constructor that takes a Mat codebook
+	// VLAD constructor that takes a codebook of Mat
 	VLAD(const string f, Mat &dic,
 		Ptr<Feature2D> detector, const int k = 16, const int d = 128)
 		: filename(f), clusters(k), dimensions(d), detector(detector)
@@ -106,25 +114,28 @@ public:
 	{	
 		int sqSize = resolution;
 		double rad = resolution * resolution / 6;
-		int hms;                          // howManySq
-		int lpd = dimensions / clusters;  // linesPerDot
+		int hms = howManySq(clusters * dimensions);
 		int thickness = resolution / 32;
-		Mat img(sqSize * 4, sqSize * 4 * clusters, CV_8UC3, Scalar::all(255));
+		Mat img(sqSize * 4, sqSize * 4 * hms, CV_8UC3, Scalar::all(255));
 
-		// 
-		for (int k = 0; k < clusters; k++) {
+		// Each Square will represent 128 dimensions
+		for (int k = 0; k < hms; k++) {
 			int counter = 0;
 			for (int r = 0; r < 4; r++) {
 				for (int c = 0; c < 4; c++) {
+					// Center of each dot, 16 dots per square
 					Point dotCtr(sqSize / 2 + sqSize * (k * 4 + r), sqSize / 2 + sqSize * c);
 
-					//
-					for (int p = 1; p <= lpd; p++) {
-						double angle = p * 360.0 / lpd;
+					// Drawing the lines, 8 lines per dot
+					for (int p = 1; p < 8; p++) {
+						double angle = p * 45.0;
 						float value = vladDesc.at<float>(k, counter++);
 						line(img, dotCtr, Point(dotCtr.x + value * rad * cos(angle * CV_PI / 180.0),
 							dotCtr.y + value * rad * sin(angle * CV_PI / 180.0)), rOrB(value), thickness);
 					}
+					line(img, dotCtr, Point(dotCtr.x + (vladDesc.at<float>(k, counter))
+						* rad, dotCtr.y), rOrB(vladDesc.at<float>(k, counter)), thickness);
+					counter++;
 					circle(img, dotCtr, resolution / 16, Scalar(0), thickness * -(resolution / 32));
 				}
 			}
@@ -132,9 +143,9 @@ public:
 			line(img, Point(4 * k * sqSize, 0), Point(4 * k * sqSize, 4 * sqSize), Scalar(0), thickness);
 		}
 		// Drawing the rest of the border
-		line(img, Point(4 * clusters * sqSize - 1, 0), Point(4 * clusters * sqSize - 1, 4 * sqSize), Scalar(0));
-		line(img, Point(0, 4 * sqSize - 1), Point(4 * clusters * sqSize, 4 * sqSize - 1), Scalar(0));
-		line(img, Point(0, 0), Point(4 * clusters * sqSize, 0), Scalar(0));
+		line(img, Point(hms * 4 * sqSize - 1, 0), Point(hms * 4 * sqSize - 1, 4 * sqSize), Scalar(0)); // Right
+		line(img, Point(0, 4 * sqSize - 1), Point(hms * 4 * sqSize, 4 * sqSize - 1), Scalar(0));      // Bottom
+		line(img, Point(0, 0), Point(hms * 4 * sqSize, 0), Scalar(0));  // Top
 
 		imshow(filename, img);
 		return img;
@@ -148,9 +159,13 @@ public:
 
 
 	// Store VLAD to disk
-	void write(const string path = "") {  // Todo: add path
-		FileStorage fs(filename + ".vlad", FileStorage::WRITE);
-		fs << "VLAD" << vladDesc;
-		fs.release();
+	void write(const string path = "") {
+		ofstream f(path + filename + ".vlad");
+		for (int k = 0; k < clusters; k++) {
+			for (int d = 0; d < dimensions; d++)
+				f << vladDesc.at<float>(k, d) << " ";
+			f << endl;
+		}
+		f.close();
 	}
 };
