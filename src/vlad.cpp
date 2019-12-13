@@ -22,7 +22,7 @@ private:
 
 
 	// Loading cookbook into memory(Mat codebook)
-	Mat loadBook(const string dictionary)
+	Mat readBook(const string dictionary)
 	{
 		FileStorage fs(dictionary, FileStorage::READ);
 		Mat codebook;
@@ -52,10 +52,6 @@ private:
         vector<DMatch> matches;
         matcher->match(desc, matches); //desc contains descriptors for each image
         
-
-		// Todo: what to do when codebook kVisualWords != VLAD k clusters
-		
-
 		// Compute VLAD descriptors
         Mat fisherVec(clusters, dimensions, CV_32FC1, Scalar::all(0.0));
         int sampleCount = matches.size();
@@ -66,11 +62,11 @@ private:
             for (int d = 0; d < dimensions; d++)
                 fisherVec.at<float>(trainIdx, d) += (codebook.at<float>(trainIdx, d) - desc.at<float>(queryIdx, d));
         }
-
 		// Normalize vector using L2-norm
 		normalize(fisherVec, vladDesc);
 	}
 
+	
 	// Helper function for draw
 	Scalar rOrB(float value)
 	{
@@ -92,7 +88,7 @@ public:
 		Ptr<Feature2D> detector, const int k = 16, const int d = 128)
 		: filename(f), clusters(k), dimensions(d), detector(detector)
 	{
-		Mat input = loadBook(dic);
+		Mat input = readBook(dic);
 		computeVLAD(input);
 	}
 
@@ -110,12 +106,10 @@ public:
 
 
 	// Todo: redo this
-	Mat draw(int resolution = 32)
-	{	
-		int sqSize = resolution;
-		double rad = resolution * resolution / 6;
+	Mat draw(int sqSize = 32, int thickness = 1)
+	{
+		double rad = sqSize * 5;
 		int hms = howManySq(clusters * dimensions);
-		int thickness = resolution / 32;
 		Mat img(sqSize * 4, sqSize * 4 * hms, CV_8UC3, Scalar::all(255));
 
 		// Each Square will represent 128 dimensions
@@ -127,25 +121,22 @@ public:
 					Point dotCtr(sqSize / 2 + sqSize * (k * 4 + r), sqSize / 2 + sqSize * c);
 
 					// Drawing the lines, 8 lines per dot
-					for (int p = 1; p < 8; p++) {
+					for (int p = 0; p < 8; p++) {
 						double angle = p * 45.0;
 						float value = vladDesc.at<float>(k, counter++);
-						line(img, dotCtr, Point(dotCtr.x + value * rad * cos(angle * CV_PI / 180.0),
-							dotCtr.y + value * rad * sin(angle * CV_PI / 180.0)), rOrB(value), thickness);
+						line(img, dotCtr, Point(dotCtr.x + abs(value) * rad * cos(angle * CV_PI / 180.0),
+							dotCtr.y + abs(value) * rad * sin(angle * CV_PI / 180.0)), rOrB(value), thickness);
 					}
-					line(img, dotCtr, Point(dotCtr.x + (vladDesc.at<float>(k, counter))
-						* rad, dotCtr.y), rOrB(vladDesc.at<float>(k, counter)), thickness);
-					counter++;
-					circle(img, dotCtr, resolution / 16, Scalar(0), thickness * -(resolution / 32));
+					circle(img, dotCtr, sqSize / 16, Scalar(0), thickness * -(sqSize / 32));
 				}
 			}
 			// Drawing borders between each cluster square
 			line(img, Point(4 * k * sqSize, 0), Point(4 * k * sqSize, 4 * sqSize), Scalar(0), thickness);
 		}
 		// Drawing the rest of the border
-		line(img, Point(hms * 4 * sqSize - 1, 0), Point(hms * 4 * sqSize - 1, 4 * sqSize), Scalar(0)); // Right
-		line(img, Point(0, 4 * sqSize - 1), Point(hms * 4 * sqSize, 4 * sqSize - 1), Scalar(0));      // Bottom
-		line(img, Point(0, 0), Point(hms * 4 * sqSize, 0), Scalar(0));  // Top
+		line(img, Point(hms * 4 * sqSize - thickness, 0), Point(hms * 4 * sqSize - thickness, 4 * sqSize), Scalar(0), thickness); // Right
+		line(img, Point(0, 4 * sqSize - thickness), Point(hms * 4 * sqSize, 4 * sqSize - thickness), Scalar(0), thickness);      // Bottom
+		line(img, Point(0, 0), Point(hms * 4 * sqSize, 0), Scalar(0), thickness);  // Top
 
 		imshow(filename, img);
 		return img;

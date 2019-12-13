@@ -54,11 +54,10 @@ public:
 
 			// Store VLAD in allWords
 			allWords.push_back(desc);
-			
-			// Compute k-means. There needs to be at least kVisualWords of lines to train
-			BOWKMeansTrainer bow(kVisualWords);
-			codebook = bow.cluster(allWords);
 		}
+		// Compute k-means. There needs to be at least kVisualWords of lines to train
+		BOWKMeansTrainer bow(kVisualWords);
+		codebook = bow.cluster(allWords);
 	}
 
 
@@ -71,11 +70,13 @@ public:
 	}
 
 
+
 	Mat getBook()
 	{
 		return codebook;
 	}
 
+	
 
 	void chdir(const string directory)
 	{
