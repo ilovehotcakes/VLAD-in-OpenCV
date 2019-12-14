@@ -10,7 +10,8 @@
 //         ukbench_16.yml, list.txt
 // Ouputs: SIFT-like VLAD display, codebook.yml
 //-----------------------------------------------------------------------------
-#include "vlad-trainer.cpp"
+#include "vlad_trainer.cpp"
+#include <iostream>
 
 
 int main(int argc, char* argv[]) {
@@ -26,20 +27,20 @@ int main(int argc, char* argv[]) {
     // Testing SIFT-VLAD + codebook
     Mat codebook = yoda.getBook();
 	VLAD kittens1_SIFT("../test_images/kittens1.jpg", codebook, detSIFT);
-	kittens1_SIFT.draw(64, 2);
+	kittens1_SIFT.draw(32, 2);
 	VLAD kittens2_SIFT("../test_images/kittens2.jpg", codebook, detSIFT);
-	kittens2_SIFT.draw(64, 2);
+	kittens2_SIFT.draw(32, 2);
 	VLAD pippy_SIFT("../test_images/pippy.jpg", codebook, detSIFT);
-	pippy_SIFT.draw(64, 2);
+	pippy_SIFT.draw(32, 2);
 	waitKey(0);
 
 	// Testing SIFT-VLAD + pre-trained codebook "ukbench_16"
-	VLAD kittens1("../test_images/kittens1.jpg", "../ukbench_16.yml", detSIFT);
-	kittens1.draw();
-	VLAD kittens2("../test_images/kittens2.jpg", "../ukbench_16.yml", detSIFT);
-	kittens2.draw();
-	VLAD pippy("../test_images/pippy.jpg", "../ukbench_16.yml", detSIFT);
-	pippy.draw();
+	VLAD kittens1("../test_images/kittens1.jpg", "ukbench_16.yml", detSIFT);
+	kittens1.draw(32, 2);
+	VLAD kittens2("../test_images/kittens2.jpg", "ukbench_16.yml", detSIFT);
+	kittens2.draw(32, 2);
+	VLAD pippy("../test_images/pippy.jpg", "ukbench_16.yml", detSIFT);
+	pippy.draw(32, 2);
 	waitKey(0);
 
 	
