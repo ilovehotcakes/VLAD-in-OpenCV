@@ -1,16 +1,27 @@
-// Only able to use codebook that has kVisualWords = clusters
-
+//--------------------------------- vlad.cpp ----------------------------------
+// Author: Jason Chen
+//-----------------------------------------------------------------------------
+// This is the VLAD class that is based on Jégou et al.'s paper "Aggregating 
+// local descriptors into a compact image presentation"(2010). It is used to 
+// generate VLAD descriptors using OpenCV Ptr and BOWImgDescriptorExtractor.
+//
+// Requirements: OpenCV with contrib module
+// Inputs: codebook, image filename
+// Ouputs: VLAD descriptor, VLAD visualization
+// Limits: (1) Only able to use codebook with kVisualWords = VLAD clusters
+//         (2) Each cell for the visualization will represent 128 values regard
+//             -less of how many dimensions each cluster contains
+//-----------------------------------------------------------------------------
 #include <opencv2/core.hpp>
 #include <opencv2/highgui.hpp>
 #include <opencv2/imgproc.hpp>
 #include <opencv2/xfeatures2d.hpp>
 #include <fstream>
 #include <vector>
-using namespace cv;  // Todo: add scope for cv namespace
+using namespace cv;
 using namespace std;
 
 
-// Todo: add namespace for cv and VLAD
 class VLAD 
 {
 private:
@@ -50,9 +61,9 @@ private:
 
         // Match each SIFT/SURF/etc. desc to a vocab from codebook
         vector<DMatch> matches;
-        matcher->match(desc, matches); //desc contains descriptors for each image
+        matcher->match(desc, matches); //desc Mat contains SIFT desc for each image
         
-		// Compute VLAD descriptors
+		// Compute Fisher vector
         Mat fisherVec(clusters, dimensions, CV_32FC1, Scalar::all(0.0));
         int sampleCount = matches.size();
         for(int i = 0; i < sampleCount; i++)
@@ -60,22 +71,25 @@ private:
             int queryIdx = matches[i].queryIdx;
             int trainIdx = matches[i].trainIdx;
             for (int d = 0; d < dimensions; d++)
-                fisherVec.at<float>(trainIdx, d) += (codebook.at<float>(trainIdx, d) - desc.at<float>(queryIdx, d));
+                fisherVec.at<float>(trainIdx, d) += 
+					(codebook.at<float>(trainIdx, d) - desc.at<float>(queryIdx, d));
         }
+
 		// Normalize vector using L2-norm
 		normalize(fisherVec, vladDesc);
 	}
 
 	
 	// Helper function for draw
+	// Returns the color of the line, blue if positive, else red
 	Scalar rOrB(float value)
 	{
-		// Blue if positive, else red
 		return (value > 0)? Scalar(255, 0, 0) : Scalar(0, 0, 255);
 	}
 
 
 	// Helper function for draw
+	// Determines how many square is need to draw the representation
 	int howManySq(int value)
 	{
 		return (value % 128 == 0)? (value / 128) : (value / 128 + 1);
@@ -83,32 +97,33 @@ private:
 
 
 public:
-	// VLAD constructor that takes a path or file and load the codebook
-	VLAD(const string f, const string dic,
+	// VLAD constructor that takes a filename and codebook name/path
+	VLAD(const string filename, const string dic,
 		Ptr<Feature2D> detector, const int k = 16, const int d = 128)
-		: filename(f), clusters(k), dimensions(d), detector(detector)
+		: filename(filename), clusters(k), dimensions(d), detector(detector)
 	{
 		Mat input = readBook(dic);
 		computeVLAD(input);
 	}
 
 
-	// VLAD constructor that takes a codebook of Mat
-	VLAD(const string f, Mat &dic,
+	// VLAD constructor that takes a filename and codebook of Mat
+	VLAD(const string filename, Mat &dic,
 		Ptr<Feature2D> detector, const int k = 16, const int d = 128)
-		: filename(f), clusters(k), dimensions(d), detector(detector)
+		: filename(filename), clusters(k), dimensions(d), detector(detector)
 	{
 		computeVLAD(dic);
 	}
 
 
+	// VLAD destructor
 	~VLAD() {}
 
 
-	// Todo: redo this
+	// Draws VLAD on screen and also returns the visualization
 	Mat draw(int sqSize = 32, int thickness = 1)
 	{
-		double rad = sqSize * 5;
+		double rad = sqSize * 5;  // Length of line
 		int hms = howManySq(clusters * dimensions);
 		Mat img(sqSize * 4, sqSize * 4 * hms, CV_8UC3, Scalar::all(255));
 
@@ -124,9 +139,11 @@ public:
 					for (int p = 0; p < 8; p++) {
 						double angle = p * 45.0;
 						float value = vladDesc.at<float>(k, counter++);
-						line(img, dotCtr, Point(dotCtr.x + abs(value) * rad * cos(angle * CV_PI / 180.0),
-							dotCtr.y + abs(value) * rad * sin(angle * CV_PI / 180.0)), rOrB(value), thickness);
+							line(img, dotCtr, Point(dotCtr.x + abs(value) * rad
+							* cos(angle * CV_PI / 180.0), dotCtr.y + abs(value) * rad 
+							* sin(angle * CV_PI / 180.0)), rOrB(value), thickness);
 					}
+					// Drawing the center dot
 					circle(img, dotCtr, sqSize / 16, Scalar(0), thickness * -(sqSize / 32));
 				}
 			}
@@ -134,22 +151,26 @@ public:
 			line(img, Point(4 * k * sqSize, 0), Point(4 * k * sqSize, 4 * sqSize), Scalar(0), thickness);
 		}
 		// Drawing the rest of the border
-		line(img, Point(hms * 4 * sqSize - thickness, 0), Point(hms * 4 * sqSize - thickness, 4 * sqSize), Scalar(0), thickness); // Right
-		line(img, Point(0, 4 * sqSize - thickness), Point(hms * 4 * sqSize, 4 * sqSize - thickness), Scalar(0), thickness);      // Bottom
+		line(img, Point(hms * 4 * sqSize - thickness, 0), Point(hms * 4 * sqSize
+			- thickness, 4 * sqSize), Scalar(0), thickness); // Right
+		line(img, Point(0, 4 * sqSize - thickness), Point(hms * 4 * sqSize, 4 * sqSize
+			- thickness), Scalar(0), thickness);                                   // Bottom
 		line(img, Point(0, 0), Point(hms * 4 * sqSize, 0), Scalar(0), thickness);  // Top
 
+		// Show visualization
 		imshow(filename, img);
 		return img;
 	}
 
 
+	// Returns VLAD as a Mat
 	Mat getVLAD()
 	{
 		return vladDesc;
 	}
 
 
-	// Store VLAD to disk
+	// Write VLAD to disk
 	void write(const string path = "") {
 		ofstream f(path + filename + ".vlad");
 		for (int k = 0; k < clusters; k++) {

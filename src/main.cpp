@@ -1,17 +1,29 @@
-#include "vlad_trainer.cpp"
+//--------------------------------- main.cpp ----------------------------------
+// Author: Jason Chen
+//-----------------------------------------------------------------------------
+// This is the driver to test VLAD class and VLADTrainer class that are based
+// on Jégou et al.'s paper "Aggregating local descriptors into a compact image
+// presentation"(2010). It tests the codebook generation with both OpenCV SIFT
+// and SURF descriptors. It will draw the VLAD on screen.
+//
+// Inputs: kittens1.jpg, kittens2.jpg, pippy.jpg, ukbench00000-00001.jpg,
+//         ukbench_16.yml, list.txt
+// Ouputs: SIFT-like VLAD display, codebook.yml
+//-----------------------------------------------------------------------------
+#include "vlad-trainer.cpp"
 
 
 int main(int argc, char* argv[]) {
-	// Using opencv SIFT
+	// Using OpenCV SIFT descriptor
     cv::Ptr<Feature2D> detSIFT = cv::xfeatures2d::SIFT::create();
 
 	// Training kittens1, kittens2, pippy, ukbench00000-00003
-	VLAD_trainer yoda("../test_images/", "list.txt");
-    yoda.train(detSIFT, 16);
-    yoda.write("codebook");
+	VLADTrainer yoda("../test_images/", "list.txt");
+    yoda.train(detSIFT, 16);  // Train codebook of 16 visual words
+    yoda.write("codebook");   // Write codebook to disk
     cout << "SIFT-VLAD training complete.." << endl;
 
-    // Testing SIFT-VLAD + trained codebook
+    // Testing SIFT-VLAD + codebook
     Mat codebook = yoda.getBook();
 	VLAD kittens1_SIFT("../test_images/kittens1.jpg", codebook, detSIFT);
 	kittens1_SIFT.draw(64, 2);
@@ -21,7 +33,7 @@ int main(int argc, char* argv[]) {
 	pippy_SIFT.draw(64, 2);
 	waitKey(0);
 
-	// Testing SIFT-VLAD + pre-trained codebook ukbench_16
+	// Testing SIFT-VLAD + pre-trained codebook "ukbench_16"
 	VLAD kittens1("../test_images/kittens1.jpg", "../ukbench_16.yml", detSIFT);
 	kittens1.draw();
 	VLAD kittens2("../test_images/kittens2.jpg", "../ukbench_16.yml", detSIFT);
@@ -32,10 +44,10 @@ int main(int argc, char* argv[]) {
 
 	
 
-	// Using SURF
+	// Using OpenCV SURF descriptor
 	cv::Ptr<Feature2D> detSURF = cv::xfeatures2d::SURF::create(400);  // minHash = 400
 
-	VLAD_trainer obiwan("../test_images/", "list.txt");
+	VLADTrainer obiwan("../test_images/", "list.txt");
 	obiwan.train(detSURF, 16);
 	cout << "SURF-VLAD training complete.." << endl;
 
@@ -51,7 +63,7 @@ int main(int argc, char* argv[]) {
 
 
     /* Training INRIA Holiday dataset with 16 visual words
-	VLAD_trainer anakin("../ukbench/", "list_ukbench.txt");
+	VLADTrainer anakin("../ukbench/", "list_ukbench.txt");
     anakin.train(detSIFT, 16);
     anakin.write("holiday_16");
     cout << "Training complete(k = 16).." << endl;
