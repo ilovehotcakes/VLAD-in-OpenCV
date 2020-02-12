@@ -5,13 +5,13 @@ This is an OpenCV implementation of Hervé Jégou, Matthijs Douze, Cordelia Schm
 
 
 ## Support
-This VLAD implementation supports OpenCV 2.4 and requires the extra modules for SIFT/SURF (xfeatures2d).
+This VLAD implementation supports OpenCV 4.1.3 and requires the extra modules for SIFT/SURF (xfeatures2d).
 
 + For Windows users, you can follow the tutorial here to build and install the modules: https://putuyuwono.wordpress.com/2015/04/23/building-and-installing-opencv-3-0-on-windows-7-64-bit/
 
 + For Mac users, the extra modules are already installed if you installed OpenCV via HomeBrew
 
-+ Currently supports OpenCV 2.4 SIFT an SURF
++ Currently supports OpenCV 4.1.3 SIFT an SURF
 
 
 ## Files
@@ -29,7 +29,7 @@ This VLAD implementation supports OpenCV 2.4 and requires the extra modules for 
 
 
 ## Usage
-+ Use the build script to build the program
++ Use the build script to build the program. Depending on the version of your OpenCV and the config, you might need to point to the correct OpenCV file in the build script 
 
 + Modify the list.txt to decide which files to compute
 
