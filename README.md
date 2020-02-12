@@ -42,3 +42,5 @@ This VLAD implementation supports OpenCV 4.1.3 and requires the extra modules fo
 + Build search engine
 
 + Documentation
+
++ Add images
