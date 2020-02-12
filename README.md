@@ -12,5 +12,20 @@ This VLAD implementation supports OpenCV 2.4 and requires the extra modules for 
 + For Mac users, the extra modules are already installed if you installed OpenCV via HomeBrew
 
 
+## Files
++ vlad.cpp - Using generated codebook to compute VLAD descriptor
+
++ vlad_trainer.cpp - Used generate codebook
+
++ main.cpp - Driver
+
 ## Usage
-Use "main.cpp" to run the system. 
+Use main as the driver to generate a new codebook, and use the codebook to generate the VLAD descriptor. 
+
+
+## To-Do
++ Build comparison function
+
++ Build search engine
+
++ Documentation
