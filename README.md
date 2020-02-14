@@ -1,20 +1,25 @@
 # VLAD in OpenCV
 
 ## Introduction
-This is an OpenCV implementation in C++ of Hervé Jégou, Matthijs Douze, Cordelia Schmid, and Patrick Pérez’s CBIR system. They try to solve the problem of retreiving image from a large database while maintaining efficiency, accuracy, and low memory usage. The paper utilizes techniques like Bag-of-words, Fisher Kernel, PCA, kNN search. It is a very good paper and I would recommend anyone to read it.
+This is an OpenCV implementation of VLAD in C++ based on Hervé Jégou, Matthijs Douze, Cordelia Schmid, and Patrick Pérez’s work (2010). VLAD is a CBIR system that retreives image from a large database while maintaining efficiency, accuracy, and low memory usage. The paper utilizes techniques like Bag-of-words, Fisher Kernel, PCA, kNN search. It is a very good paper and I would recommend anyone to read it.
+
+You can either run the program using your dataset to generate your own codebook, or you can use the provided, pre-trained codebook and dataset to get you started.
+
 
 ## Reference
 Jegou, H., Perronnin, F., Douze, M., Sanchez, J., Perez, P., & Schmid, C. (2012). Aggregating Local Image Descriptors into Compact Codes. IEEE Transactions on Pattern Analysis and Machine Intelligence, 34(9), 1704-1716.
 
 
-## Support
-This VLAD implementation supports OpenCV 4.1.3 and requires the extra modules for SIFT/SURF (xfeatures2d).
+## Requirements
++ Requires OpenCV 4.1.0 and the contrib modules with NONFREE enabled.
 
-+ For Windows users, you can follow the tutorial here to build and install the modules: https://putuyuwono.wordpress.com/2015/04/23/building-and-installing-opencv-3-0-on-windows-7-64-bit/
++ For Windows users, you can follow the tutorial here to build and install the contrib modules: https://putuyuwono.wordpress.com/2015/04/23/building-and-installing-opencv-3-0-on-windows-7-64-bit/
 
-+ For Mac users, the extra modules are already installed if you installed OpenCV via HomeBrew
++ For Mac users, the contrib modules comes installed if you installed OpenCV via HomeBrew
 
-+ Currently supports OpenCV 4.1.3 SIFT an SURF
++ Currently supports OpenCV 4.1.0-4.1.2, might be backwards compatible but haven't been tested
+
++ Supports SIFT an SURF descriptors
 
 
 ## Files
