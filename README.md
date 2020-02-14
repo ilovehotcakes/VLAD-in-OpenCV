@@ -1,7 +1,10 @@
 # VLAD in OpenCV
 
 ## Introduction
-This is an OpenCV implementation of Hervé Jégou, Matthijs Douze, Cordelia Schmid, and Patrick Pérez’s work titled "Aggregating local descriptors into a compact representation". They try to solve the problem of retreiving image from a large database while maintaining efficiency, accuracy, and low memory usage. The paper utilizes techniques like Bag-of-words, Fisher Kernel, PCA, kNN search. It is a very well written paper and I would recommend anyone to read it.
+This is an OpenCV implementation in C++ of Hervé Jégou, Matthijs Douze, Cordelia Schmid, and Patrick Pérez’s CBIR system. They try to solve the problem of retreiving image from a large database while maintaining efficiency, accuracy, and low memory usage. The paper utilizes techniques like Bag-of-words, Fisher Kernel, PCA, kNN search. It is a very good paper and I would recommend anyone to read it.
+
+## Reference
+Jegou, H., Perronnin, F., Douze, M., Sanchez, J., Perez, P., & Schmid, C. (2012). Aggregating Local Image Descriptors into Compact Codes. IEEE Transactions on Pattern Analysis and Machine Intelligence, 34(9), 1704-1716.
 
 
 ## Support
@@ -43,4 +46,12 @@ This VLAD implementation supports OpenCV 4.1.3 and requires the extra modules fo
 
 + Documentation
 
-+ Add images
++ Add result images
+
++ Add code samples
+
++ Add testing dataset
+
+
+## Contributor
+Jason Chen @ kidultimate@gmail.com
